@@ -220,7 +220,7 @@ function update() {
 requestAnimationFrame(update);
 ```
 
-The `else if (player.dx < 0)` makes it so that the player decelerates when the key is up.
+The `else if (player.dx < 0)` makes it so that the player decelerates when the key is up, but stops decelerating when the speed gets to `0`.
 
 Here is the result of all our changes:
 
