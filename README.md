@@ -276,3 +276,54 @@ function update() {
 
 requestAnimationFrame(update);
 ```
+
+## v0.4 Vertical movement
+
+Adding vertical movement is pretty straightforward -- we just need to handle the up and down arrow keys:
+
+```javascript
+var up = 38;
+var down = 40;
+// ...
+var is_up_down = false;
+var is_down_down = false;
+
+document.addEventListener('keydown', function(event) {
+  // ...
+  if (event.keyCode == up)
+    is_up_down = true;
+  else if (event.keyCode == down)
+    is_down_down = true;
+});
+
+document.addEventListener('keyup', function(event) {
+  // ...
+  if (event.keyCode == up)
+    is_up_down = false;
+  else if (event.keyCode == down)
+    is_down_down = false;
+});
+```
+
+Then we need to make them adjust a `dy` (vertical speed, or "delta y") which affects the player's `y` coordinate:
+
+```javascript
+function update() {
+  // ...
+
+  // vertical movement
+  if (is_up_down)
+    player.dy = player.dy - 0.1;
+  else if (player.dy < 0)
+    player.dy = player.dy + 0.1;
+
+  if (is_down_down)
+    player.dy = player.dy + 0.1;
+  else if (player.dy > 0)
+    player.dy = player.dy - 0.1;
+
+  player.y = player.y + player.dy; 
+
+  // ...
+}
+```
