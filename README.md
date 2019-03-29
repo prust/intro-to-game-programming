@@ -63,4 +63,75 @@ Notice that I'm abbreviating context as `ctx`. Programmers use abbreviations all
 
 `fillStyle` defines the style -- in this case, just a solid blue color. `fillRect()` takes four numbers, called "arguments": `fillRect(x, y, w, h)`. The first two numbers represent the x and y coordinates of the upper-left corner and the second two numbers represent the width and height of the rectangle.
 
+## v0.2 Moving the player with the arrow keys
+
+Let's start by allowing the player to move their sprite left and right with the arrow keys. Javascript uses the codes `37` for the left arrow key and `39` for the right arrow key. Let's define these as new variables, so we don't have to remember them:
+
+<canvas id="canvas"></canvas>
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+  
+ctx.fillStyle = 'blue';
+ctx.fillRect(10, 10, 20, 20);
+
+var left = 37;
+var right = 39;
+</script>
+```
+
+Next we need to add an event handler for the keydown event (when the player presses the key), and move the rectangle left or right:
+
+```
+<canvas id="canvas"></canvas>
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+  
+ctx.fillStyle = 'blue';
+ctx.fillRect(10, 10, 20, 20);
+
+var left = 37;
+var right = 39;
+document.addEventListener('keydown', function(event) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (event.keyCode == left)
+    ctx.fillRect(0, 10, 20, 20);
+  else if (event.keyCode == right)
+    ctx.fillRect(20, 10, 20, 20);
+});
+</script>
+```
+
+There is a lot going on here. `document.addEventListener('keydown')` is a way to listen for (and react to) "keydown" events. The function that it takes is a function that runs every time the player presses a key down. Inside the function we clear out the canvas via `clearRect()` (otherwise the new rectangle would just show up on top of the old one). And finally we check if the `keyCode` is left or right and draw the rectangle in the appropriate place.
+
+If you try this, you'll notice that the rectangle will only go "one step" to the left and "one step" to the right. It won't continue going left or right because we've hard-coded the coordinates `0, 10` for left and `20, 10` for right. To make things more flexible, we need to create a `player` object with an `x` and `y` property:
+
+```javascript
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+var player = {
+  x: 10,
+  y: 10
+};
+ctx.fillStyle = 'blue';
+ctx.fillRect(player.x, player.y, 20, 20);
+
+var left = 37;
+var right = 39;
+document.addEventListener('keydown', function(event) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (event.keyCode == left)
+    player.x = player.x - 10;
+  else if (event.keyCode == right)
+    player.x = player.x + 10;
+
+  ctx.fillRect(player.x, player.y, 20, 20);
+});
+```
+
+Now the player can move repeatedly (even off the screen) left or right. 
 
