@@ -104,4 +104,18 @@ function update() {
 
 requestAnimationFrame(update);
 
+// determines if the two objects overlap
+function collides(obj1, obj2) {
+  // calculate the x/y coordinates of the bottom-right corner for obj1
+  var obj1_x2 = obj1.x + obj1.w;
+  var obj1_y2 = obj1.y + obj1.h;
+
+  // calculate the x/y coordinates of the bottom-right corner for obj2
+  var obj2_x2 = obj2.x + obj2.w;
+  var obj2_y2 = obj2.y + obj2.h;
+
+  return obj1_x2 > obj2.x && obj1.x < obj2_x2 && // x-dimension overlap
+        obj1_y2 > obj2.y && obj1.y < obj2_y2; // y-dimension overlap
+}
+
 </script>
