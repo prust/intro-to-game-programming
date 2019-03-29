@@ -334,3 +334,5 @@ You may have noticed scrollbars and scrolling messing up things. This is because
 document.body.style.margin = 0;
 ```
 
+## v0.5 Bullets
+
