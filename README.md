@@ -67,6 +67,7 @@ Notice that I'm abbreviating context as `ctx`. Programmers use abbreviations all
 
 Let's start by allowing the player to move their sprite left and right with the arrow keys. Javascript uses the codes `37` for the left arrow key and `39` for the right arrow key. Let's define these as new variables, so we don't have to remember them:
 
+```html
 <canvas id="canvas"></canvas>
 <script>
 var canvas = document.getElementById('canvas');
@@ -82,7 +83,7 @@ var right = 39;
 
 Next we need to add an event handler for the keydown event (when the player presses the key), and move the rectangle left or right:
 
-```
+```html
 <canvas id="canvas"></canvas>
 <script>
 var canvas = document.getElementById('canvas');
