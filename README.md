@@ -327,3 +327,10 @@ function update() {
   // ...
 }
 ```
+
+You may have noticed scrollbars and scrolling messing up things. This is because the web page, by default, has some margins that are pushing things too wide/tall and creating scrollbars. To fix this, simply set the document body margin to zero, by adding this line near the top of your script:
+
+```javascript
+document.body.style.margin = 0;
+```
+
