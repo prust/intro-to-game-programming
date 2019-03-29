@@ -138,3 +138,141 @@ document.addEventListener('keydown', function(event) {
 
 Now the player can move repeatedly (even off the screen) left or right. 
 
+## v0.3 Smooth Movement / Animation
+
+You may have noticed that you can't go very far to the right before the player disappears. That's because the canvas, by default, doesn't fill the window. You can fix this by adding these two lines near the top, after getting the canvas:
+
+```javascript
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
+```
+
+The movement is jerky and the user has to repetitively press the left and right arrow keys to move. We want the user to be able to hold down the keys and see themselve accelerate, and to release the key and see themselves decelerate.
+
+To do this, we need to listen to the keydown and keyup events and track whether the left and right keys are down.
+
+Also, in order to show smooth movement and acceleration/deceleration, we need to introduce a new property, `dx`, to represent the horizontal speed or the "delta x". We'll go ahead & add a `dy` as well, even though we won't use it yet:
+
+```javascript
+var player = {
+  x: 10,
+  y: 10,
+  dx: 0,
+  dy: 0
+};
+```
+
+Here's the code to keep track of which keys are down:
+
+```javascript
+var is_left_down = false;
+var is_right_down = false;
+document.addEventListener('keydown', function(event) {
+  if (event.keyCode == left)
+    is_left_down = true;
+  else if (event.keyCode == right)
+    is_right_down = true;
+});
+
+document.addEventListener('keyup', function(event) {
+  if (event.keyCode == left)
+    is_left_down = false;
+  else if (event.keyCode == right)
+    is_right_down = false;
+});
+```
+
+In order to repaint the canvas frequently, instead of only when the keys are pressed, we'll need to create an update function that runs on every "animation frame" via `requestAnimationFrame()`:
+
+```javascript
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'blue';
+  ctx.fillRect(player.x, player.y, 20, 20);
+  requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+```
+
+Next, at the top of the function, we need to check which keys are pressed and update the delta x based on it. 
+
+```javascript
+function update() {
+  if (is_left_down)
+    player.dx = player.dx - 0.1;
+  else if (player.dx < 0)
+    player.dx = player.dx + 0.1;
+
+  if (is_right_down)
+    player.dx = player.dx + 0.1;
+  else if (player.dx > 0)
+    player.dx = player.dx - 0.1;
+
+  player.x = player.x + player.dx;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'blue';
+  ctx.fillRect(player.x, player.y, 20, 20);
+  requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+```
+
+The `else if (player.dx < 0)` makes it so that the player decelerates when the key is up.
+
+Here is the result of all our changes:
+
+```javascript
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
+
+var player = {
+  x: 10,
+  y: 10,
+  dx: 0,
+  dy: 0
+};
+
+var left = 37;
+var right = 39;
+var is_left_down = false;
+var is_right_down = false;
+document.addEventListener('keydown', function(event) {
+  if (event.keyCode == left)
+    is_left_down = true;
+  else if (event.keyCode == right)
+    is_right_down = true;
+});
+
+document.addEventListener('keyup', function(event) {
+  if (event.keyCode == left)
+    is_left_down = false;
+  else if (event.keyCode == right)
+    is_right_down = false;
+});
+
+function update() {
+  if (is_left_down)
+    player.dx = player.dx - 0.1;
+  else if (player.dx < 0)
+    player.dx = player.dx + 0.1;
+
+  if (is_right_down)
+    player.dx = player.dx + 0.1;
+  else if (player.dx > 0)
+    player.dx = player.dx - 0.1;
+
+  player.x = player.x + player.dx;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'blue';
+  ctx.fillRect(player.x, player.y, 20, 20);
+  requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+```
