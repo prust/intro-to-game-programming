@@ -61,6 +61,6 @@ ctx.fillRect(10, 10, 20, 20);
 
 Notice that I'm abbreviating context as `ctx`. Programmers use abbreviations all the time. This might make things slightly more cryptic, but when you're reading and typing things over and over, you learn to appreciate abbreviations.
 
-`fillStyle` defines the style -- in this case, just a solid blue color. `fillRect()` takes four numbers, called "arguments": `fillRect(x1, y1, x2, y2)`. The first two numbers represent the x and y coordinates of the upper-left corner and the second two numbers represent the x and y coordinate of the lower-right corner.
+`fillStyle` defines the style -- in this case, just a solid blue color. `fillRect()` takes four numbers, called "arguments": `fillRect(x, y, w, h)`. The first two numbers represent the x and y coordinates of the upper-left corner and the second two numbers represent the width and height of the rectangle.
 
 
