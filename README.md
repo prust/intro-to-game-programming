@@ -105,7 +105,7 @@ document.addEventListener('keydown', function(event) {
 </script>
 ```
 
-There is a lot going on here. `document.addEventListener('keydown')` is a way to listen for (and react to) "keydown" events. The function that it takes is a function that runs every time the player presses a key down. Inside the function we clear out the canvas via `clearRect()` (otherwise the new rectangle would just show up on top of the old one). And finally we check if the `keyCode` is left or right and draw the rectangle in the appropriate place.
+There is a lot going on here. `document.addEventListener('keydown')` is a way to listen for (and react to) "keydown" events. The function that it takes is a function that runs every time the player presses a key down. Inside the function we clear out the canvas via `clearRect()` (otherwise the new rectangle would just show up on top of the old one). And finally we check if the `keyCode` is left or right and draw the rectangle in the appropriate place. Notice the double-equals `==`. In programming the `==` is a check for whether the value on the left equals the value on the right. This is different from the single-equals `=` we saw above that **assigns** or **sets** the value on the right to the variable on the left.
 
 If you try this, you'll notice that the rectangle will only go "one step" to the left and "one step" to the right. It won't continue going left or right because we've hard-coded the coordinates `0, 10` for left and `20, 10` for right. To make things more flexible, we need to create a `player` object with an `x` and `y` property:
 
