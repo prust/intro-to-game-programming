@@ -7,13 +7,21 @@ canvas.height = document.body.clientHeight;
 document.body.style.margin = 0;
 
 var player = {
-  x: 10,
-  y: 10,
+  x: canvas.width / 2,
+  y: canvas.height / 2,
   dx: 0,
-  dy: 0
+  dy: 0,
+  w: 20,
+  h: 20
 };
 
 var bullets = [];
+var enemies = [
+  {x: 50, y: 50, dx: 0, dy: 0, w: 20, h: 20},
+  {x: canvas.width - 50, y: 50, dx: 0, dy: 0, w: 20, h: 20},
+  {x: 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20},
+  {x: canvas.width - 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20}
+];
 
 var left = 37;
 var right = 39;
@@ -57,8 +65,10 @@ document.addEventListener('click', function(event) {
   var bullet = {
   	x: player.x,
   	y: player.y,
-  	dx: (event.clientX - player.x) / 10,
-  	dy: (event.clientY - player.y) / 10
+  	dx: (event.clientX - player.x) / 30,
+  	dy: (event.clientY - player.y) / 30,
+    w: 5,
+    h: 5
   };
   bullets.push(bullet);
 });
@@ -103,25 +113,65 @@ function update() {
   else if (player.dy < -max_speed)
     player.dy = -max_speed;
 
-  player.y = player.y + player.dy;  
+  player.y = player.y + player.dy;
 
+  var bullet_indexes_to_destroy = [];
   for (var i = 0; i < bullets.length; i++) {
-    bullets[i].x = bullets[i].x + bullets[i].dx;
-    bullets[i].y = bullets[i].y + bullets[i].dy;
+    var bullet = bullets[i];
+    bullet.x = bullet.x + bullet.dx;
+    bullet.y = bullet.y + bullet.dy;
+    
+    var is_offscreen = bullet.x < 0 || bullet.y < 0 ||
+      bullet.x > canvas.width || bullet.y > canvas.height;
+    
+    if (is_offscreen) {
+      bullet_indexes_to_destroy.push(i);
+    }
+    // avoid hitting enemy w/ bullet we're destroying, so it doesn't get in array twice
+    else {
+      var hit_enemy_ix = null;
+      for (var k = 0; k < enemies.length; k++) {
+        var enemy = enemies[k];
+        if (collides(enemy, bullet))
+          hit_enemy_ix = k;
+      }
+      if (hit_enemy_ix != null) {
+        bullet_indexes_to_destroy.push(i);
+        enemies.splice(hit_enemy_ix, 1);
+      }
+    }
+  }
+
+  bullet_indexes_to_destroy.reverse();
+  for (var i = 0; i < bullet_indexes_to_destroy.length; i++) {
+    var index = bullet_indexes_to_destroy[i];
+    bullets.splice(index, 1);
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'blue';
-  ctx.fillRect(player.x, player.y, 20, 20);
   
+  // draw player
+  ctx.fillStyle = 'blue';
+  drawEntity(player, ctx);
+  
+  // draw bullets
   ctx.fillStyle = 'red';
   for (var i = 0; i < bullets.length; i++)
-    ctx.fillRect(bullets[i].x, bullets[i].y, 5, 5);
+    drawEntity(bullets[i], ctx);
+
+  // draw enemies
+  ctx.fillStyle = 'green';
+  for (var i = 0; i < enemies.length; i++)
+    drawEntity(enemies[i], ctx);
 
   requestAnimationFrame(update);
 }
 
 requestAnimationFrame(update);
+
+function drawEntity(ent, ctx) {
+  ctx.fillRect(ent.x, ent.y, ent.w, ent.h);
+}
 
 // determines if the two objects overlap
 function collides(obj1, obj2) {
