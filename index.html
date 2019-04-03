@@ -19,6 +19,10 @@ var left = 37;
 var right = 39;
 var up = 38;
 var down = 40;
+var w_key = 87;
+var a_key = 65;
+var s_key = 83;
+var d_key = 68;
 
 var is_left_down = false;
 var is_right_down = false;
@@ -26,26 +30,26 @@ var is_up_down = false;
 var is_down_down = false;
 
 document.addEventListener('keydown', function(event) {
-  if (event.keyCode == left)
+  if (event.keyCode == left || event.keyCode == a_key)
     is_left_down = true;
-  else if (event.keyCode == right)
+  else if (event.keyCode == right || event.keyCode == d_key)
     is_right_down = true;
 
-  if (event.keyCode == up)
+  if (event.keyCode == up || event.keyCode == w_key)
     is_up_down = true;
-  else if (event.keyCode == down)
+  else if (event.keyCode == down || event.keyCode == s_key)
     is_down_down = true;
 });
 
 document.addEventListener('keyup', function(event) {
-  if (event.keyCode == left)
+  if (event.keyCode == left || event.keyCode == a_key)
     is_left_down = false;
-  else if (event.keyCode == right)
+  else if (event.keyCode == right || event.keyCode == d_key)
     is_right_down = false;
 
-  if (event.keyCode == up)
+  if (event.keyCode == up || event.keyCode == w_key)
     is_up_down = false;
-  else if (event.keyCode == down)
+  else if (event.keyCode == down || event.keyCode == s_key)
     is_down_down = false;
 });
 
