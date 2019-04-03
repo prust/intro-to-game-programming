@@ -12,16 +12,19 @@ var player = {
   dx: 0,
   dy: 0,
   w: 20,
-  h: 20
+  h: 20,
+  game_over: false
 };
 
 var bullets = [];
-var enemies = [
-  {x: 50, y: 50, dx: 0, dy: 0, w: 20, h: 20},
-  {x: canvas.width - 50, y: 50, dx: 0, dy: 0, w: 20, h: 20},
-  {x: 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20},
-  {x: canvas.width - 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20}
-];
+var enemy_bullets = [];
+var enemies = [];
+var level = 1;
+
+var max_fire_interval = 5000;
+var min_fire_interval = 3000;
+
+createEnemies();
 
 var left = 37;
 var right = 39;
@@ -62,16 +65,41 @@ document.addEventListener('keyup', function(event) {
 });
 
 document.addEventListener('click', function(event) {
+  bullets.push(createBullet(player, {x: event.clientX, y: event.clientY}, 0.03));
+});
+
+function levelUp() {
+  level++;
+  max_fire_interval = max_fire_interval / 1.3;
+  min_fire_interval = min_fire_interval / 1.3;
+  createEnemies();
+}
+
+function createEnemies() {
+  if (level >= 1)
+    enemies.push({x: 50, y: 50, dx: 0, dy: 0, w: 20, h: 20});
+  if (level >= 2)
+    enemies.push({x: canvas.width - 50, y: 50, dx: 0, dy: 0, w: 20, h: 20});
+  if (level >= 3)
+    enemies.push({x: 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20});
+  if (level >= 4)
+    enemies.push({x: canvas.width - 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20});
+
+  for (var i = 0; i < enemies.length; i++)
+    enemies[i].fire_next = chooseNextFireTime();
+}
+
+function createBullet(src, dest, speed) {
   var bullet = {
-  	x: player.x,
-  	y: player.y,
-  	dx: (event.clientX - player.x) / 30,
-  	dy: (event.clientY - player.y) / 30,
+    x: src.x,
+    y: src.y,
+    dx: (dest.x - src.x) * speed,
+    dy: (dest.y - src.y) * speed,
     w: 5,
     h: 5
   };
-  bullets.push(bullet);
-});
+  return bullet;
+}
 
 function update() {
   var max_speed = 10;
@@ -138,6 +166,8 @@ function update() {
       if (hit_enemy_ix != null) {
         bullet_indexes_to_destroy.push(i);
         enemies.splice(hit_enemy_ix, 1);
+        if (!enemies.length)
+          levelUp();
       }
     }
   }
@@ -146,6 +176,22 @@ function update() {
   for (var i = 0; i < bullet_indexes_to_destroy.length; i++) {
     var index = bullet_indexes_to_destroy[i];
     bullets.splice(index, 1);
+  }
+
+  for (var i = 0; i < enemies.length; i++) {
+    var enemy = enemies[i];
+    if (enemy.fire_next < Date.now()) {
+      enemy_bullets.push(createBullet(enemy, player, 0.01));
+      enemy.fire_next = chooseNextFireTime();
+    }
+  }
+
+  for (var i = 0; i < enemy_bullets.length; i++) {
+    var bullet = enemy_bullets[i];
+    bullet.x = bullet.x + bullet.dx;
+    bullet.y = bullet.y + bullet.dy;
+    if (collides(bullet, player))
+      player.game_over = true;
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -159,18 +205,27 @@ function update() {
   for (var i = 0; i < bullets.length; i++)
     drawEntity(bullets[i], ctx);
 
+  ctx.fillStyle = 'blue';
+  for (var i = 0; i < enemy_bullets.length; i++)
+    drawEntity(enemy_bullets[i], ctx);
+
   // draw enemies
   ctx.fillStyle = 'green';
   for (var i = 0; i < enemies.length; i++)
     drawEntity(enemies[i], ctx);
 
-  requestAnimationFrame(update);
+  if (!player.game_over)
+    requestAnimationFrame(update);
 }
 
 requestAnimationFrame(update);
 
 function drawEntity(ent, ctx) {
   ctx.fillRect(ent.x, ent.y, ent.w, ent.h);
+}
+
+function chooseNextFireTime() {
+  return Date.now() + min_fire_interval + Math.random() * (max_fire_interval - min_fire_interval);
 }
 
 // determines if the two objects overlap
