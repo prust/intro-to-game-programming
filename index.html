@@ -60,29 +60,44 @@ document.addEventListener('click', function(event) {
 });
 
 function update() {
+  var max_speed = 10;
+  var thrust_accel = 0.8;
+  var coast_decel = 0.2;
+
   // horizontal movement
   if (is_left_down)
-    player.dx = player.dx - 0.1;
+    player.dx = player.dx - thrust_accel;
   else if (player.dx < 0)
-    player.dx = player.dx + 0.1;
+    player.dx = player.dx + coast_decel;
 
   if (is_right_down)
-    player.dx = player.dx + 0.1;
+    player.dx = player.dx + thrust_accel;
   else if (player.dx > 0)
-    player.dx = player.dx - 0.1;
+    player.dx = player.dx - coast_decel;
+
+
+  if (player.dx > max_speed)
+    player.dx = max_speed;
+  else if (player.dx < -max_speed)
+    player.dx = -max_speed;
 
   player.x = player.x + player.dx;
 
   // vertical movement
   if (is_up_down)
-    player.dy = player.dy - 0.1;
+    player.dy = player.dy - thrust_accel;
   else if (player.dy < 0)
-    player.dy = player.dy + 0.1;
+    player.dy = player.dy + coast_decel;
 
   if (is_down_down)
-    player.dy = player.dy + 0.1;
+    player.dy = player.dy + thrust_accel;
   else if (player.dy > 0)
-    player.dy = player.dy - 0.1;
+    player.dy = player.dy - coast_decel;
+
+  if (player.dy > max_speed)
+    player.dy = max_speed;
+  else if (player.dy < -max_speed)
+    player.dy = -max_speed;
 
   player.y = player.y + player.dy;  
 
