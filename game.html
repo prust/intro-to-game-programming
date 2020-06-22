@@ -1,0 +1,276 @@
+<canvas id="canvas"></canvas>
+<img style="display: none" src="https://raw.githubusercontent.com/prust/intro-to-game-programming/master/images/ship.png">
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
+document.body.style.margin = 0;
+
+var player = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  dx: 0,
+  dy: 0,
+  w: 20,
+  h: 20,
+  game_over: false
+};
+
+var bullets = [];
+var enemy_bullets = [];
+var enemies = [];
+var level = 1;
+
+var max_fire_interval = 5000;
+var min_fire_interval = 3000;
+
+createEnemies();
+
+var left = 37;
+var right = 39;
+var up = 38;
+var down = 40;
+var w_key = 87;
+var a_key = 65;
+var s_key = 83;
+var d_key = 68;
+
+var is_left_down = false;
+var is_right_down = false;
+var is_up_down = false;
+var is_down_down = false;
+
+document.addEventListener('keydown', function(event) {
+  if (event.keyCode == left || event.keyCode == a_key)
+    is_left_down = true;
+  else if (event.keyCode == right || event.keyCode == d_key)
+    is_right_down = true;
+
+  if (event.keyCode == up || event.keyCode == w_key)
+    is_up_down = true;
+  else if (event.keyCode == down || event.keyCode == s_key)
+    is_down_down = true;
+});
+
+document.addEventListener('keyup', function(event) {
+  if (event.keyCode == left || event.keyCode == a_key)
+    is_left_down = false;
+  else if (event.keyCode == right || event.keyCode == d_key)
+    is_right_down = false;
+
+  if (event.keyCode == up || event.keyCode == w_key)
+    is_up_down = false;
+  else if (event.keyCode == down || event.keyCode == s_key)
+    is_down_down = false;
+});
+
+document.addEventListener('click', function(event) {
+  bullets.push(createBullet(player, {x: event.clientX, y: event.clientY}, 5));
+});
+
+function levelUp() {
+  level++;
+  max_fire_interval = max_fire_interval / 1.3;
+  min_fire_interval = min_fire_interval / 1.3;
+  createEnemies();
+}
+
+function createEnemies() {
+  if (level >= 1)
+    enemies.push({x: 50, y: 50, dx: 0, dy: 0, w: 20, h: 20});
+  if (level >= 2)
+    enemies.push({x: canvas.width - 50, y: 50, dx: 0, dy: 0, w: 20, h: 20});
+  if (level >= 3)
+    enemies.push({x: 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20});
+  if (level >= 4)
+    enemies.push({x: canvas.width - 50, y: canvas.height - 50, dx: 0, dy: 0, w: 20, h: 20});
+
+  for (var i = 0; i < enemies.length; i++)
+    enemies[i].fire_next = chooseNextFireTime();
+}
+
+function createBullet(src, dest, speed) {
+  var speed_vector = normalize(src, dest, speed);
+
+  var bullet = {
+    x: src.x,
+    y: src.y,
+    dx: speed_vector.x,
+    dy: speed_vector.y,
+    w: 5,
+    h: 5
+  };
+  return bullet;
+}
+
+function update() {
+  var max_speed = 10;
+  var thrust_accel = 0.6;
+  var coast_decel = 0.05;
+
+  // horizontal movement
+  if (is_left_down)
+    player.dx = player.dx - thrust_accel;
+  else if (player.dx < 0)
+    player.dx = player.dx + coast_decel;
+
+  if (is_right_down)
+    player.dx = player.dx + thrust_accel;
+  else if (player.dx > 0)
+    player.dx = player.dx - coast_decel;
+
+
+  if (player.dx > max_speed)
+    player.dx = max_speed;
+  else if (player.dx < -max_speed)
+    player.dx = -max_speed;
+
+  player.x = player.x + player.dx;
+
+  // vertical movement
+  if (is_up_down)
+    player.dy = player.dy - thrust_accel;
+  else if (player.dy < 0)
+    player.dy = player.dy + coast_decel;
+
+  if (is_down_down)
+    player.dy = player.dy + thrust_accel;
+  else if (player.dy > 0)
+    player.dy = player.dy - coast_decel;
+
+  if (player.dy > max_speed)
+    player.dy = max_speed;
+  else if (player.dy < -max_speed)
+    player.dy = -max_speed;
+
+  player.y = player.y + player.dy;
+
+  // bullet collisions w/ enemies
+  var bullet_indexes_to_destroy = [];
+  for (var i = 0; i < bullets.length; i++) {
+    var bullet = bullets[i];
+    bullet.x = bullet.x + bullet.dx;
+    bullet.y = bullet.y + bullet.dy;
+    
+    var is_offscreen = bullet.x < 0 || bullet.y < 0 ||
+      bullet.x > canvas.width || bullet.y > canvas.height;
+    
+    if (is_offscreen) {
+      bullet_indexes_to_destroy.push(i);
+    }
+    // avoid hitting enemy w/ bullet we're destroying, so it doesn't get in array twice
+    else {
+      var hit_enemy_ix = null;
+      for (var k = 0; k < enemies.length; k++) {
+        var enemy = enemies[k];
+        if (collides(enemy, bullet))
+          hit_enemy_ix = k;
+      }
+      if (hit_enemy_ix != null) {
+        bullet_indexes_to_destroy.push(i);
+        enemies.splice(hit_enemy_ix, 1);
+        if (!enemies.length)
+          levelUp();
+      }
+    }
+  }
+
+  bullet_indexes_to_destroy.reverse();
+  for (var i = 0; i < bullet_indexes_to_destroy.length; i++) {
+    var index = bullet_indexes_to_destroy[i];
+    bullets.splice(index, 1);
+  }
+
+  // enemy firing
+  for (var i = 0; i < enemies.length; i++) {
+    var enemy = enemies[i];
+    if (enemy.fire_next < Date.now()) {
+      enemy_bullets.push(createBullet(enemy, player, 5));
+      enemy.fire_next = chooseNextFireTime();
+    }
+  }
+
+  // enemy bullet collisions w/ player
+  for (var i = 0; i < enemy_bullets.length; i++) {
+    var bullet = enemy_bullets[i];
+    bullet.x = bullet.x + bullet.dx;
+    bullet.y = bullet.y + bullet.dy;
+    if (collides(bullet, player))
+      player.game_over = true;
+  }
+
+  // enemy movement (TODO: use dx/dy & centralize movement code)
+  for (var enemy of enemies) {
+    var speed = normalize(enemy, player, 2);
+    enemy.x += speed.x;
+    enemy.y += speed.y;
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // draw player
+  ctx.fillStyle = 'blue';
+  drawEntity(player, ctx);
+  
+  // draw bullets
+  ctx.fillStyle = 'red';
+  for (var i = 0; i < bullets.length; i++)
+    drawEntity(bullets[i], ctx);
+
+  ctx.fillStyle = 'blue';
+  for (var i = 0; i < enemy_bullets.length; i++)
+    drawEntity(enemy_bullets[i], ctx);
+
+  // draw enemies
+  ctx.fillStyle = 'green';
+  for (var i = 0; i < enemies.length; i++)
+    drawEntity(enemies[i], ctx);
+
+  if (!player.game_over)
+    requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+
+function drawEntity(ent, ctx) {
+  ctx.fillRect(ent.x, ent.y, ent.w, ent.h);
+}
+
+function chooseNextFireTime() {
+  return Date.now() + min_fire_interval + Math.random() * (max_fire_interval - min_fire_interval);
+}
+
+// determines if the two objects overlap
+function collides(obj1, obj2) {
+  // calculate the x/y coordinates of the bottom-right corner for obj1
+  var obj1_x2 = obj1.x + obj1.w;
+  var obj1_y2 = obj1.y + obj1.h;
+
+  // calculate the x/y coordinates of the bottom-right corner for obj2
+  var obj2_x2 = obj2.x + obj2.w;
+  var obj2_y2 = obj2.y + obj2.h;
+
+  return obj1_x2 > obj2.x && obj1.x < obj2_x2 && // x-dimension overlap
+        obj1_y2 > obj2.y && obj1.y < obj2_y2; // y-dimension overlap
+}
+
+// normalize a vector to length of 1 (and multiply it by a certain size multiplier, if provided)
+function normalize(src, dst, size) {
+  var distance = dist(src, dst);
+
+  // guard for divide-by-zero
+  if (!distance)
+    throw new Error(`normalize() Divide by zero! ${JSON.stringify(src)}, ${JSON.stringify(dst)}`);
+
+  return {
+    x: (dst.x - src.x) / distance * size,
+    y: (dst.y - src.y) / distance * size
+  };  
+}
+
+function dist(obj1, obj2) {
+  return Math.sqrt(Math.pow(obj1.x - obj2.x, 2) + Math.pow(obj1.y - obj2.y, 2));
+}
+
+</script>
